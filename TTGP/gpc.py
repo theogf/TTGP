@@ -9,9 +9,9 @@ from TTGP.misc import _kron_tril, _kron_logdet, pairwise_quadratic_form
 
 class TTGPC:
 
-    def __init__(self, cov, inputs, x_init, y_init, mu_ranks): 
+    def __init__(self, cov, inputs, x_init, y_init, mu_ranks,i):
         '''Gaussian Process model for multiclass classification.
-        
+
         Args:
             cov: a multidimensional covariance.
             should share the same FeatureTransformer.
@@ -20,6 +20,7 @@ class TTGPC:
             mu_ranks: TT-ranks of mu - expectations of the process at
                 inducing inputs.
         '''
+        self.i = i
         self.inputs = inputs
         self.inputs_dists = inputs.kron_dists()
         self.n_class = cov.ndim
@@ -28,12 +29,13 @@ class TTGPC:
         self.mus = self._get_mus(mu_ranks, x_init, y_init)
         self.N = 0 # Size of the training set
 
+
     def _get_mus(self, ranks, x_init, y_init):
         w = self.inputs.interpolate_on_batch(self.cov.project(x_init))
         Sigma = ops.tt_tt_matmul(self.sigma_ls[0], ops.transpose(self.sigma_ls[0]))
-        temp = ops.tt_tt_matmul(w, y_init)        
-        anc = ops.tt_tt_matmul(Sigma, temp) 
-        res = TensorTrain([core[0, :, :, :, :] for core in anc.tt_cores], 
+        temp = ops.tt_tt_matmul(w, y_init)
+        anc = ops.tt_tt_matmul(Sigma, temp)
+        res = TensorTrain([core[0, :, :, :, :] for core in anc.tt_cores],
                 tt_ranks=[1]*(anc.ndims()+1))
         res = res
         for i in range(1, anc.get_shape()[0]):
@@ -44,13 +46,13 @@ class TTGPC:
         mu_cores = []
         for core in res.tt_cores:
             mu_cores.append(tf.tile(core[None, ...], [self.n_class, 1, 1, 1, 1]))
-        return t3f.get_variable('tt_mus', 
-            initializer=TensorTrainBatch(mu_cores, res.get_raw_shape(), mu_ranks))
+        return t3f.get_variable('tt_mus',
+                                initializer=TensorTrainBatch(mu_cores, res.get_raw_shape(), mu_ranks))
 
     def _get_sigma_ls(self):
         cov = self.cov
         inputs_dists = self.inputs_dists
-        K_mm = cov.kron_cov(inputs_dists)    
+        K_mm = cov.kron_cov(inputs_dists)
         return t3f.get_variable('sigma_ls', initializer=kron.cholesky(K_mm))
 
     def initialize(self, sess):
