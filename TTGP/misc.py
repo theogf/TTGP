@@ -21,9 +21,12 @@ def mse(y_pred, y_true):
     return mse
 
 def accuracy(y_pred, y_true):
-    """Acuracy score.
+    """Accuracy score
     """
+    # y_true = tf.Print(y_true, [y_true], summarize=10)
+    # y_pred = tf.Print(y_pred, [y_pred], summarize=10)
     correct_prediction = tf.equal(y_pred, y_true)
+    # print(correct_prediction)
     return tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 def accuracy_struct(y_pred, y_true):

@@ -9,7 +9,7 @@ from TTGP.misc import _kron_tril, _kron_logdet, pairwise_quadratic_form
 
 class TTGPC:
 
-    def __init__(self, cov, inputs, x_init, y_init, mu_ranks,i):
+    def __init__(self, cov, inputs, x_init, y_init, mu_ranks):
         '''Gaussian Process model for multiclass classification.
 
         Args:
@@ -20,7 +20,6 @@ class TTGPC:
             mu_ranks: TT-ranks of mu - expectations of the process at
                 inducing inputs.
         '''
-        self.i = i
         self.inputs = inputs
         self.inputs_dists = inputs.kron_dists()
         self.n_class = cov.ndim

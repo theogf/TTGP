@@ -9,18 +9,20 @@ from TTGP.gpc import TTGPC
 from TTGP import grid
 from TTGP.misc import accuracy, num_correct
 
+
 class GPCRunner:
-  """
+    """
   Experiment runner for TT-GPstruct model.
   """
-  def __init__(self, n_inputs, mu_ranks, covs, data_dir=None,
-        X=None,y=None,X_test=None,y_test=None,
-        lr=0.01, n_epoch=15, decay=None, batch_size=None,
-        preprocess_op=None, te_preprocess_op=None,
-        log_dir=None, save_dir=None,data_type='numpy',
-        model_dir=None, load_model=False, print_freq=None,
-        num_threads=1, batch_test=True,i=0):
-    """Runs the experiments for the given parameters and data.
+
+    def __init__(self, n_inputs, mu_ranks, covs, data_dir=None,
+                 X=None, y=None, X_test=None, y_test=None,
+                 lr=0.01, n_epoch=15, batch_size=None,
+                 preprocess_op=None, te_preprocess_op=None,
+                 log_dir=None, save_dir=None, data_type='numpy',
+                 model_dir=None, load_model=False, print_freq=None,
+                 num_threads=1, batch_test=True):
+        """Runs the experiments for the given parameters and data.
     Args:
       data_dir: Path to the directory, containing the data; the data is assumed
         to be stored as `data_dir/x_tr.npy`, `data_dir/x_te.npy`,
@@ -54,67 +56,66 @@ class GPCRunner:
       batch_test: A `bool` indicating weather or not to use batches for the test
         dataset.
     """
-    self.X = X
-    self.y = y
-    self.X_test = X_test
-    self.y_test = y_test
-    self.data_dir = data_dir
-    self.data_type = data_type
-    self.n_inputs = n_inputs
-    self.mu_ranks = mu_ranks
-    self.covs = covs
-    self.lr = lr
-    self.n_epoch = n_epoch
-    self.decay = decay
-    self.batch_size = batch_size
-    self.preprocess_op = preprocess_op
-    self.te_preprocess_op = te_preprocess_op
-    self.log_dir = log_dir
-    self.save_dir = save_dir
-    self.model_dir = model_dir
-    self.load_model = load_model
-    self.print_freq = print_freq
-    self.frequent_print = not (print_freq is None)
-    self.num_threads = num_threads
-    self.batch_test = batch_test
-    self.i = i
+        self.X = X
+        self.y = y
+        self.X_test = X_test
+        self.y_test = y_test
+        self.data_dir = data_dir
+        self.data_type = data_type
+        self.n_inputs = n_inputs
+        self.mu_ranks = mu_ranks
+        self.covs = covs
+        self.lr = lr
+        self.n_epoch = n_epoch
+        self.decay = None  # (5,0.2)
+        self.batch_size = batch_size
+        self.preprocess_op = preprocess_op
+        self.te_preprocess_op = te_preprocess_op
+        self.log_dir = log_dir
+        self.save_dir = save_dir
+        self.model_dir = model_dir
+        self.load_model = load_model
+        self.print_freq = print_freq
+        self.frequent_print = not (print_freq is None)
+        self.num_threads = num_threads
+        self.batch_test = batch_test
 
-  @staticmethod
-  def _init_inputs(d, n_inputs):
-    """Initializes inducing inputs for the model.
+    @staticmethod
+    def _init_inputs(d, n_inputs):
+        """Initializes inducing inputs for the model.
     """
-    inputs = grid.InputsGrid(d, npoints=n_inputs, left=-1.)
-    return inputs
+        inputs = grid.InputsGrid(d, npoints=n_inputs, left=-1.)
+        return inputs
 
-  @staticmethod
-  def _get_data(X,y,X_test,y_test):
-    """Loads the dataset.
+    @staticmethod
+    def _get_data(X, y, X_test, y_test):
+        """Loads the dataset.
     """
-    x_tr = make_tensor(X, 'x_tr')
-    y_tr = make_tensor(y.astype(int), 'y_tr', dtype=tf.int64)
-    x_te = make_tensor(X_test, 'x_te')
-    y_te = make_tensor(y_test.astype(int), 'y_te', dtype=tf.int64)
+        x_tr = make_tensor(X, 'x_tr')
+        y_tr = make_tensor(y.astype(int), 'y_tr', dtype=tf.int64)
+        x_te = make_tensor(X_test, 'x_te')
+        y_te = make_tensor(y_test.astype(int), 'y_te', dtype=tf.int64)
 
-#    x_tr = tf.cast(tf.constant(x_tr), tf.float64)
-#    y_tr = tf.cast(tf.constant(y_tr), tf.int64)
-#    x_te = tf.cast(tf.constant(x_te), tf.float64)
-#    y_te = tf.cast(tf.constant(y_te), tf.int64)
-    return x_tr, y_tr, x_te, y_te
+        #    x_tr = tf.cast(tf.constant(x_tr), tf.float64)
+        #    y_tr = tf.cast(tf.constant(y_tr), tf.int64)
+        #    x_te = tf.cast(tf.constant(x_te), tf.float64)
+        #    y_te = tf.cast(tf.constant(y_te), tf.int64)
+        return x_tr, y_tr, x_te, y_te
 
-  # @staticmethod
-  # def _get_data(data_dir, data_type):
-  #   """Loads the dataset.
-  #   """
-  #   x_tr, y_tr, x_te, y_te = prepare_data(data_dir, mode=data_type,
-  #                                                  target='class')
-  #   x_tr = make_tensor(x_tr, 'x_tr')
-  #   y_tr = make_tensor(y_tr.astype(int), 'y_tr', dtype=tf.int64)
-  #   x_te = make_tensor(x_te, 'x_te')
-  #   y_te = make_tensor(y_te.astype(int), 'y_te', dtype=tf.int64)
-  #   return x_tr, y_tr, x_te, y_te
+    # @staticmethod
+    # def _get_data(data_dir, data_type):
+    #   """Loads the dataset.
+    #   """
+    #   x_tr, y_tr, x_te, y_te = prepare_data(data_dir, mode=data_type,
+    #                                                  target='class')
+    #   x_tr = make_tensor(x_tr, 'x_tr')
+    #   y_tr = make_tensor(y_tr.astype(int), 'y_tr', dtype=tf.int64)
+    #   x_te = make_tensor(x_te, 'x_te')
+    #   y_te = make_tensor(y_te.astype(int), 'y_te', dtype=tf.int64)
+    #   return x_tr, y_tr, x_te, y_te
 
-  def _make_batches(self, x, y, batch_size, test=False):
-    """Generates batches for training.
+    def _make_batches(self, x, y, batch_size, test=False):
+        """Generates batches for training.
 
     Args:
       x: `tf.Tensor` containing features.
@@ -128,29 +129,29 @@ class GPCRunner:
       y_batch: `tf.Tensor` containing labels for the current batch.
 
     """
-    sample_x, sample_y = tf.train.slice_input_producer([x, y], shuffle=True)
-    if (self.preprocess_op is not None) and (not test):
-      sample_x = self.preprocess_op(sample_x)
-    if (self.te_preprocess_op is not None) and test:
-      sample_x = self.te_preprocess_op(sample_x)
-    sample = [sample_x, sample_y]
-    x_batch, y_batch = tf.train.batch(sample, batch_size,
-        num_threads=self.num_threads, capacity=256+3*batch_size)
-    return x_batch, y_batch
+        sample_x, sample_y = tf.train.slice_input_producer([x, y], shuffle=True)
+        if (self.preprocess_op is not None) and (not test):
+            sample_x = self.preprocess_op(sample_x)
+        if (self.te_preprocess_op is not None) and test:
+            sample_x = self.te_preprocess_op(sample_x)
+        sample = [sample_x, sample_y]
+        x_batch, y_batch = tf.train.batch(sample, batch_size,
+                                          num_threads=self.num_threads, capacity=256 + 3 * batch_size)
+        return x_batch, y_batch
 
-  @staticmethod
-  def _make_mu_initializers(y_init, d):
-    # TODO: get rid of this.
-    n_init = y_init.get_shape()[0]
-    y_init_cores = [tf.cast(tf.reshape(y_init, (-1, 1, 1, 1, 1)), tf.float64)]
-    for core_idx in range(d):
-      if core_idx > 0:
-        y_init_cores += [tf.ones((n_init, 1, 1, 1, 1), dtype=tf.float64)]
-    y_init = t3f.TensorTrainBatch(y_init_cores)
-    return y_init
+    @staticmethod
+    def _make_mu_initializers(y_init, d):
+        # TODO: get rid of this.
+        n_init = y_init.get_shape()[0]
+        y_init_cores = [tf.cast(tf.reshape(y_init, (-1, 1, 1, 1, 1)), tf.float64)]
+        for core_idx in range(d):
+            if core_idx > 0:
+                y_init_cores += [tf.ones((n_init, 1, 1, 1, 1), dtype=tf.float64)]
+        y_init = t3f.TensorTrainBatch(y_init_cores)
+        return y_init
 
-  def eval(self, sess, correct_on_batch, iter_per_test, n_test):
-    """Evaluation of the model.
+    def eval(self, sess, correct_on_batch, iter_per_test, n_test):
+        """Evaluation of the model.
 
     Args:
       sess: A `tf.Session` instance.
@@ -160,124 +161,125 @@ class GPCRunner:
       n_test: number of objects in the test set.
 
     """
-    correct = 0
-    for i in range(iter_per_test):
-      correct += sess.run(correct_on_batch)
-    accuracy = correct / n_test
-    return accuracy
+        correct = 0
+        for i in range(iter_per_test):
+            correct += sess.run(correct_on_batch)
+        accuracy = correct / n_test
+        return accuracy
+    def comp_likelihood(self,preds,y_te,N_te):
+        loglike = []
+        for j in range(N_te):
+            if y_te[j] == 0:
+                loglike.append(tf.log(1-preds[j]))
+            else:
+                loglike.append(tf.log(preds[j]))
+        return tf.stack(loglike)
 
-  def run_experiment(self):
-    """Run the experiment.
+    def run_experiment(self):
+        """Run the experiment.
     """
-    start_compilation = time.time()
-    d = self.covs.feature_dim()
-    if self.data_dir is None:
-      x_tr, y_tr, x_te, y_te = self._get_data(self.X,self.y,self.X_test,self.y_test)
-    else:
-      x_tr, y_tr, x_te, y_te = self._get_data(self.data_dir,self.data_type)
-    x_batch, y_batch = self._make_batches(x_tr, y_tr, self.batch_size)
-    if self.batch_test:
-      x_te_batch, y_te_batch = self._make_batches(x_te, y_te, self.batch_size,
-          test=True)
+        start_compilation = time.time()
+        d = self.covs.feature_dim()
+        if self.data_dir is None:
+            x_tr, y_tr, x_te, y_te = self._get_data(self.X, self.y, self.X_test, self.y_test)
+        else:
+            x_tr, y_tr, x_te, y_te = self._get_data(self.data_dir, self.data_type)
+        x_batch, y_batch = self._make_batches(x_tr, y_tr, self.batch_size)
+        if self.batch_test:
+            x_te_batch, y_te_batch = self._make_batches(x_te, y_te, self.batch_size,
+                                                        test=True)
 
-    # TODO: get rid of this.
-    x_init, y_init = self._make_batches(x_tr, y_tr, self.mu_ranks)
-    y_init = self._make_mu_initializers(y_init, d)
+        # TODO: get rid of this.
+        x_init, y_init = self._make_batches(x_tr, y_tr, self.mu_ranks)
+        y_init = self._make_mu_initializers(y_init, d)
 
-    inputs = self._init_inputs(d, self.n_inputs)
+        inputs = self._init_inputs(d, self.n_inputs)
 
-    N = y_tr.get_shape()[0].value
-    N_te = y_te.get_shape()[0].value
-    iter_per_epoch = int(N / self.batch_size)
-    if self.batch_test:
-        iter_per_te = int(N_te / self.batch_size)
-    maxiter = iter_per_epoch * self.n_epoch
+        N = y_tr.get_shape()[0].value
+        N_te = y_te.get_shape()[0].value
+        iter_per_epoch = int(N / self.batch_size)
+        if self.batch_test:
+            iter_per_te = int(N_te / self.batch_size)
+        maxiter = self.n_epoch
 
-#    if not self.log_dir is None:
-#        print('Deleting old stats')
-#        os.system('rm -rf ' + self.log_dir)
+        #    if not self.log_dir is None:
+        #        print('Deleting old stats')
+        #        os.system('rm -rf ' + self.log_dir)
 
+        self.gp = TTGPC(self.covs, inputs, x_init, y_init, self.mu_ranks)
 
-    self.gp = TTGPC(self.covs, inputs, x_init, y_init, self.mu_ranks,self.i)
+        # Training ops
+        global_step = tf.Variable(0, trainable=False)
+        if self.decay is not None:
+            steps = iter_per_epoch * self.decay[0]
+            print(steps, 'steps before decay')
+            lr = tf.train.exponential_decay(self.lr, global_step,
+                                            steps, self.decay[1], staircase=True)
+        else:
+            lr = tf.Variable(self.lr, trainable=False)
+        print('x_batch', x_batch.shape)
+        elbo, train_op = self.gp.fit(x_batch, y_batch, N, lr, global_step)
+        preds = self.gp._predict_process_values(x_te, test=True)
+        pred = tf.argmax(preds, axis=1)
+        accuracy_te = accuracy(pred, y_te)
+        preds = tf.divide(tf.exp(preds[:,1]),tf.exp(preds[:,0]+tf.exp(preds[:,1])))
+        loglike = self.comp_likelihood(preds,y_te,N_te)
+        # Saving results
+        model_params = self.gp.get_params()
+        saver = tf.train.Saver(model_params)
+        coord = tf.train.Coordinator()
+        init = tf.global_variables_initializer()
+        data_initializer = tf.variables_initializer([x_tr, y_tr, x_te, y_te])
 
-    # Training ops
-    global_step = tf.Variable(0, trainable=False)
-    if self.decay is not None:
-      steps = iter_per_epoch * self.decay[0]
-      print(steps, 'steps before decay')
-      lr = tf.train.exponential_decay(self.lr, global_step,
-                                steps, self.decay[1], staircase=True)
-    else:
-      lr = tf.Variable(self.lr, trainable=False)
-    print('x_batch', x_batch.shape)
-    elbo, train_op = self.gp.fit(x_batch, y_batch, N, lr, global_step)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        # Main session
+        with tf.Session() as sess:
+            # Initialization
+            sess.run(data_initializer)
+            threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+            self.gp.initialize(sess)
+            sess.run(init)
+            batch_elbo = 0
+            start_epoch = time.time()
+            t0 = time.time() - start_compilation
+            acc0 = sess.run(accuracy_te)
+            ll0 = sess.run(loglike)
+            elbo0 = sess.run(elbo)/iter_per_epoch
+            t1 = time.time() - start_compilation
+            metrics = np.array([[t0, acc0, np.mean(ll0), np.median(ll0), elbo0, t1]])
 
-    # Evaluation ops
-    if self.batch_test:
-      pred = self.gp.predict(x_te_batch, test=True)
-      correct_te_batch = num_correct(pred, y_te_batch)
-    else:
-      pred = self.gp.predict(x_te, test=True)
-      accuracy_te = accuracy(pred, y_te)
+            # Training
+            for i in range(maxiter):
+                if ((not (i % iter_per_epoch)) or
+                        (self.frequent_print and not (i % self.print_freq))):
+                    if i == 0:
+                        print('Compilation took', time.time() - start_compilation)
+                    print('Epoch', i / iter_per_epoch, ', lr=', lr.eval(), ':')
+                    if i != 0:
+                        print('\tEpoch took:', time.time() - start_epoch)
+                    accuracy_val = sess.run(accuracy_te)
+                    print('\taccuracy on test set:', accuracy_val)
+                    print('\taverage elbo:', batch_elbo / iter_per_epoch)
 
-    # Saving results
-    model_params = self.gp.get_params()
-    saver = tf.train.Saver(model_params)
-    coord = tf.train.Coordinator()
-    init = tf.global_variables_initializer()
-    data_initializer = tf.variables_initializer([x_tr, y_tr, x_te, y_te])
-    metrics=[]
+                    batch_elbo = 0
+                    start_epoch = time.time()
 
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    # Main session
-    with tf.Session() as sess:
-      # Initialization
-      sess.run(data_initializer)
-      threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-      self.gp.initialize(sess)
-      sess.run(init)
+                # Training operation
+                elbo_val, _, _ = sess.run([elbo, train_op, update_ops])
+                batch_elbo += elbo_val
+                if np.mod(i,max(1,np.power(10,np.floor(np.log10(i+1/10))))) == 0:
+                    t0 = time.time() - start_compilation
+                    acc0 = sess.run(accuracy_te)
+                    ll0 = sess.run(loglike)
+                    elbo0 = sess.run(elbo)/iter_per_epoch
+                    t1 = time.time() - start_compilation
+                    metrics = np.concatenate((metrics, np.array([[t0, acc0, np.mean(ll0), np.median(ll0), elbo0, t1]])), axis=0)
 
-      if self.load_model:
-        print('Restoring the model...')
-        saver.restore(sess, self.model_dir)
-        print('restored.')
-
-      batch_elbo = 0
-      start_epoch = time.time()
-
-      # Training
-      for i in range(maxiter):
-        if ((not (i % iter_per_epoch)) or
-        (self.frequent_print and not (i % self.print_freq))):
-          if i == 0:
-            print('Compilation took', time.time() - start_compilation)
-          print('Epoch', i/iter_per_epoch, ', lr=', lr.eval(), ':')
-          if i != 0:
-            print('\tEpoch took:', time.time() - start_epoch)
-          if self.batch_test:
-            accuracy_val = self.eval(sess, correct_te_batch, iter_per_te, N_te)
-          else:
             accuracy_val = sess.run(accuracy_te)
-          print('\taccuracy on test set:', accuracy_val)
-          print('\taverage elbo:', batch_elbo / iter_per_epoch)
-
-          batch_elbo = 0
-          start_epoch = time.time()
-          metrics[]
-
-        # Training operation
-        # elbo_val = sess.run([elbo])
-        elbo_val, _, _ = sess.run([elbo, train_op, update_ops])
-        batch_elbo += elbo_val
-
-      if self.batch_test:
-        accuracy_val = self.eval(sess, correct_te_batch, iter_per_te, N_te)
-      else:
-        accuracy_val = sess.run(accuracy_te)
-      print('Final accuracy:', accuracy_val)
-      if not self.save_dir is None:
-        model_path = saver.save(sess, self.save_dir)
-        print("Model saved in file: %s" % model_path)
-        self.gp.cov.projector.save_weights(sess)
-      y_pred = sess.run(self.gp._predict_process_values(x_te,with_variance=False,test=True))
-      return (metrics,y_pred)
+            print('Final accuracy:', accuracy_val)
+            if not self.save_dir is None:
+                model_path = saver.save(sess, self.save_dir)
+                print("Model saved in file: %s" % model_path)
+                self.gp.cov.projector.save_weights(sess)
+            y_pred = sess.run(self.gp._predict_process_values(x_te, with_variance=False, test=True))
+            return (y_pred, metrics)

@@ -119,5 +119,5 @@ class InputsGrid:
       core = tf.expand_dims(core, -1)
       core = tf.expand_dims(core, -1)
       w_cores.append(core)
-    W = TensorTrainBatch(w_cores)
+    W = TensorTrainBatch(w_cores, batch_size = x.shape.as_list()[0])
     return W
