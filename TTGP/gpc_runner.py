@@ -192,9 +192,7 @@ class GPCRunner:
         # TODO: get rid of this.
         x_init, y_init = self._make_batches(x_tr, y_tr, self.mu_ranks)
         y_init = self._make_mu_initializers(y_init, d)
-
         inputs = self._init_inputs(d, self.n_inputs)
-
         N = y_tr.get_shape()[0].value
         N_te = y_te.get_shape()[0].value
         iter_per_epoch = int(N / self.batch_size)
@@ -217,7 +215,6 @@ class GPCRunner:
                                             steps, self.decay[1], staircase=True)
         else:
             lr = tf.Variable(self.lr, trainable=False)
-        print('x_batch', x_batch.shape)
         elbo, train_op = self.gp.fit(x_batch, y_batch, N, lr, global_step)
         preds = self.gp._predict_process_values(x_te, test=True)
         pred = tf.argmax(preds, axis=1)

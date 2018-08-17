@@ -10,8 +10,8 @@ from TTGP.projectors import FeatureTransformer, LinearProjector, Identity
 from TTGP.gpc_runner import GPCRunner
 
 N_samples = 1000
-N_dim = 10
-N_inducingpoints=20
+N_dim = 20
+N_inducingpoints=2
 noise = 0.1
 X,y = make_classification(n_samples=N_samples,n_features=N_dim,n_classes=2,n_clusters_per_class=2,n_informative=N_dim,n_redundant=0)
 X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.33)
@@ -20,7 +20,7 @@ n_epochs=111
 y_p,m = 0,0
 with tf.Graph().as_default():
     data_dir = "data_class/"
-    n_inputs = 20
+    n_inputs = 30
     mu_ranks = 10
     projector = Identity(D=N_dim)
     C = 2
