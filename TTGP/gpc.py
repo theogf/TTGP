@@ -21,7 +21,6 @@ class TTGPC:
                 inducing inputs.
         '''
         self.inputs = inputs
-        print(inputs)
         self.inputs_dists = inputs.kron_dists()
         self.n_class = cov.ndim
         self.cov = cov
