@@ -81,10 +81,10 @@ class GPCRunner:
         self.batch_test = batch_test
 
     @staticmethod
-    def _init_inputs(d, n_inputs):
+    def _init_inputs(d, n_inputs, left=-1.0, right=1.0):
         """Initializes inducing inputs for the model.
     """
-        inputs = grid.InputsGrid(d, npoints=n_inputs, left=-1.)
+        inputs = grid.InputsGrid(d, npoints=n_inputs, left=left, right=right)
         return inputs
 
     @staticmethod
@@ -192,7 +192,9 @@ class GPCRunner:
         # TODO: get rid of this.
         x_init, y_init = self._make_batches(x_tr, y_tr, self.mu_ranks)
         y_init = self._make_mu_initializers(y_init, d)
-        inputs = self._init_inputs(d, self.n_inputs)
+        Xmin = amin(self.X)
+        Xmax = amax(self.X)
+        inputs = self._init_inputs(d, self.n_inputs,left=Xmin,right=Xmax)
         N = y_tr.get_shape()[0].value
         N_te = y_te.get_shape()[0].value
         iter_per_epoch = int(N / self.batch_size)
