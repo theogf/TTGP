@@ -192,8 +192,8 @@ class GPCRunner:
         # TODO: get rid of this.
         x_init, y_init = self._make_batches(x_tr, y_tr, self.mu_ranks)
         y_init = self._make_mu_initializers(y_init, d)
-        Xmin = amin(self.X)
-        Xmax = amax(self.X)
+        Xmin = np.amin(self.X)
+        Xmax = np.amax(self.X)
         inputs = self._init_inputs(d, self.n_inputs,left=Xmin,right=Xmax)
         N = y_tr.get_shape()[0].value
         N_te = y_te.get_shape()[0].value
